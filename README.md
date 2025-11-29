@@ -143,7 +143,7 @@ ampy --port /dev/ttyUSB0 put test_all.py
 
 ## License
 
-[Your License Here]
+MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Contributing
 
