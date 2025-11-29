@@ -1,0 +1,41 @@
+# Sump Alarm Project .gitignore
+
+# Credentials and configuration (DO NOT COMMIT)
+config.py
+secrets.py
+*.pem
+*.key
+
+# Old ESP8266 project files (deprecated)
+old_sump_alarm.py
+Old_Chat.md
+Old_ESP8266_Sump_Alarm_Docs.ipynb
+
+# Test files (optional - uncomment if you don't want to commit test files)
+# test_*.py
+# esp32_telegram_test.py
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# MicroPython cache
+.mpy
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
