@@ -17,6 +17,7 @@ A MicroPython-based sump pump alarm system for ESP32-C3 that monitors water leve
 ### 1. Clone or Download the Repository
 
 ```bash
+
 git clone https://github.com/yourusername/sump-alarm.git
 cd sump-alarm
 ```
