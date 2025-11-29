@@ -23,39 +23,66 @@ cd sump-alarm
 
 ### 2. Configure Credentials
 
-**IMPORTANT**: Never commit sensitive credentials to GitHub!
+**SECURITY WARNING**: Never commit sensitive credentials to GitHub! The `config.py` file is automatically excluded by `.gitignore`.
 
-1. Copy the configuration template:
+1. **Copy the configuration template**:
    ```bash
    cp config_template.py config.py
    ```
 
-2. Edit `config.py` with your actual credentials:
-   - WiFi SSID and password
-   - Telegram bot token and chat ID
-   - Gmail credentials (use App Password)
-   - Ntfy topic
-   - Email recipients
+2. **Edit `config.py` with your actual credentials**:
+   ```python
+   # WiFi Configuration
+   WIFI_SSID = "Your_WiFi_Name"
+   WIFI_PASSWORD = "your_wifi_password"
 
-### 3. Set Up Notification Services
+   # Telegram Bot Configuration
+   TELEGRAM_BOT_TOKEN = "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+   TELEGRAM_CHAT_ID = "123456789"
 
-#### Telegram Setup
-1. Message @BotFather on Telegram to create a bot
-2. Get your bot token
-3. Start a chat with your bot and send a message
-4. Use `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates` to get your chat ID
+   # Gmail Configuration (use App Password, not regular password)
+   GMAIL_USER = "your_email@gmail.com"
+   GMAIL_APP_PASSWORD = "abcd-efgh-ijkl-mnop"  # 16-character App Password
 
-#### Gmail Setup
+   # Ntfy Configuration
+   NTFY_TOPIC = "your_unique_topic_name"
+
+   # Email Recipients
+   EMAIL_RECIPIENTS = [
+       "your_email@example.com",
+       "another_person@example.com",
+       "1234567890@tmomail.net"  # SMS via carrier gateway
+   ]
+   ```
+
+#### Setting Up Each Service
+
+**Telegram Setup:**
+1. Message [@BotFather](https://t.me/botfather) on Telegram
+2. Create a new bot with `/newbot` command
+3. Copy the bot token to `TELEGRAM_BOT_TOKEN`
+4. Start a chat with your bot and send a message
+5. Get your chat ID: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+6. Copy the chat ID to `TELEGRAM_CHAT_ID`
+
+**Gmail Setup:**
 1. Enable 2-Factor Authentication on your Gmail account
 2. Generate an App Password: https://myaccount.google.com/apppasswords
-3. Use the App Password in `config.py` (not your regular password)
+3. Select "App" → "Other (custom name)" → Enter "ESP32 Sump Alarm"
+4. Use the 16-character password in `GMAIL_APP_PASSWORD`
 
-#### Ntfy Setup
-1. Choose a unique topic name
-2. Install the Ntfy app on your phone
-3. Subscribe to your topic
+**Ntfy Setup:**
+1. Choose a unique topic name (e.g., "yourname-sump-alarm")
+2. Install Ntfy app on your phone
+3. Subscribe to your topic in the app
 
-### 4. Upload to ESP32-C3
+**SMS via Email:**
+- T-Mobile: `number@tmomail.net`
+- Verizon: `number@vtext.com`
+- AT&T: `number@txt.att.net`
+- Add these to `EMAIL_RECIPIENTS` for SMS alerts
+
+### 3. Upload to ESP32-C3
 
 Use your preferred tool (ampy, mpremote, Thonny, etc.):
 
@@ -70,7 +97,7 @@ ampy --port /dev/ttyUSB0 put email_sender.py
 ampy --port /dev/ttyUSB0 put mybase64.py
 ```
 
-### 5. Test the System
+### 4. Test the System
 
 Upload and run the test files to verify each notification method:
 
