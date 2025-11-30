@@ -336,11 +336,38 @@ def send_notifications():
     print_memory_status("End of notifications")
     return success
 
+# Debouncing configuration
+DEBOUNCE_SECONDS = 15      # Switch must be on for this many seconds before alarm
+SAMPLE_INTERVAL_MS = 100   # Sample interval in milliseconds for debouncing
+SAMPLES_REQUIRED = 10      # Number of consecutive samples required to confirm state
+
+def read_sensor_debounced(samples=SAMPLES_REQUIRED, interval_ms=SAMPLE_INTERVAL_MS):
+    """Read sensor with debouncing - requires multiple consistent readings"""
+    consistent_count = 0
+    last_value = pin.value()
+    
+    for _ in range(samples):
+        time.sleep_ms(interval_ms)
+        current_value = pin.value()
+        if current_value == last_value:
+            consistent_count += 1
+        else:
+            consistent_count = 0
+            last_value = current_value
+    
+    # Return the value only if we got consistent readings
+    if consistent_count >= samples - 1:
+        return last_value
+    else:
+        # Inconsistent readings - assume no water (fail-safe)
+        return 0
+
 # Initialization
 print_memory_status("Startup")
 notificationSent = False
 notBuzzingYet = True
 secondsFlooded = 0
+alarmTriggered = False  # Track if we've already triggered the alarm
 
 # Initialize GPIO
 led = Pin(LED_PIN, Pin.OUT)
@@ -358,23 +385,29 @@ in_a = Pin(SPEAKER_IN_A, Pin.OUT)  # To H-Bridge IN_A
 in_b = Pin(SPEAKER_IN_B, Pin.OUT)  # To H-Bridge IN_B
 
 print('ESP32-C3 Sump Alarm System Starting')
-print('Version 2.1 - November 2025')
+print('Version 2.2 - November 2025 (with debouncing)')
+print(f'Debounce threshold: {DEBOUNCE_SECONDS} seconds')
 blink_led(3)  # Signal startup
 print_memory_status("After initialization")
 
 # Forever loop
 while True:
     time.sleep(1)
-    if pin.value() == 1:  # Water detected (adjust based on your sensor logic)
+    
+    # Use debounced sensor reading to filter out noise
+    sensor_value = read_sensor_debounced()
+    
+    if sensor_value == 1:  # Water detected (adjust based on your sensor logic)
         secondsFlooded += 1
-        print(f"Water detected for {secondsFlooded} seconds")
+        print(f"Water detected for {secondsFlooded} seconds (alarm at {DEBOUNCE_SECONDS}s)")
         
-        # Start alarm after 2 seconds of continuous detection
-        if secondsFlooded == 2:
-            print('ALERT: Water level is high!')
+        # Start alarm after DEBOUNCE_SECONDS of continuous detection
+        if secondsFlooded == DEBOUNCE_SECONDS and not alarmTriggered:
+            print('ALERT: Water level is high! (confirmed after debounce)')
             led.value(1)  # Solid LED to indicate alarm
+            alarmTriggered = True
             
-            # Start the buzzer immediately
+            # Start the buzzer
             notBuzzingYet = False
             tim.init(period=1, mode=Timer.PERIODIC, callback=alarmSound)
             
@@ -385,7 +418,7 @@ while True:
                 print("Notification error but alarm continues:", e)
         
         # Keep alarm on and retry notification every 10 minutes if first attempt failed
-        elif secondsFlooded >= 2:
+        elif secondsFlooded > DEBOUNCE_SECONDS:
             print('ALERT: Water level is high!')
             led.value(1)  # Solid LED for alarm
     
@@ -404,11 +437,12 @@ while True:
     else:
         toggle(led)  # Blink LED in normal operation
         if secondsFlooded > 0:
-            print("Normal water level restored")
+            print(f"Water level restored (was high for {secondsFlooded}s, alarm triggered: {alarmTriggered})")
         
         secondsFlooded = 0
         notificationSent = False
         notBuzzingYet = True
+        alarmTriggered = False  # Reset alarm state when water level returns to normal
         tim.deinit()  # Stop alarm sound
 
 
